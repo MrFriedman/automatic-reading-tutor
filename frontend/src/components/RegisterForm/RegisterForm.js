@@ -39,7 +39,7 @@ function RegisterForm() {
 
     if (email && username && password) {
       try {
-        const resp = await httpClient.post("/register", {
+        await httpClient.post("/register", {
           email,
           username,
           password,
@@ -166,7 +166,7 @@ function RegisterForm() {
             </MDBBtn>
             <p className="ms-5">
               Already have an account?{" "}
-              <a href="/" class="link-info">
+              <a href="/" className="link-info">
                 Login here
               </a>
             </p>
@@ -176,7 +176,7 @@ function RegisterForm() {
         <MDBCol sm="6" className="d-none d-sm-block px-0">
           <img
             src="/images/bg2.png"
-            alt="Login image"
+            alt="Illustrated reading scene"
             className="w-100"
             style={{ objectFit: "cover", objectPosition: "left" }}
           />

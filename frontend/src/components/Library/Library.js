@@ -51,6 +51,8 @@ function Library(props) {
         alert("Error retrieving books");
       }
     })();
+    // Loaded once for the difficulty chosen on the previous screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**

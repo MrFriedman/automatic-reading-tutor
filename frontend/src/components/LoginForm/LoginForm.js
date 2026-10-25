@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import httpClient from "../../httpClient";
+import { isDemoMode } from "../../demo/config";
+import { DEMO_ADMIN, DEMO_LEARNER } from "../../demo/store";
 import {
   MDBBtn,
   MDBContainer,
@@ -19,11 +21,13 @@ function LoginForm() {
    * Handle login when the user submits the form.
    * Sends a POST request to the backend to authenticate the user.
    */
-  const logInUser = async () => {
+  const logInUser = async (override) => {
+    const loginEmail = override?.email ?? email;
+    const loginPassword = override?.password ?? password;
     try {
       const resp = await httpClient.post("/login", {
-        email,
-        password,
+        email: loginEmail,
+        password: loginPassword,
       });
 
       // Save user data and role (admin or learner) to local storage
@@ -117,6 +121,47 @@ function LoginForm() {
             >
               Login
             </MDBBtn>
+            {isDemoMode() && (
+              <div
+                className="mx-5 mb-4 p-3"
+                style={{ backgroundColor: "#f4f7fb", borderRadius: "8px" }}
+              >
+                <p className="mb-2" style={{ fontSize: "0.95rem" }}>
+                  This preview runs in the browser. Sign in with a demo account,
+                  or register a new learner.
+                </p>
+                <p className="mb-1" style={{ fontSize: "0.9rem" }}>
+                  Learner: {DEMO_LEARNER.email} / {DEMO_LEARNER.password}
+                </p>
+                <p className="mb-3" style={{ fontSize: "0.9rem" }}>
+                  Admin: {DEMO_ADMIN.email} / {DEMO_ADMIN.password}
+                </p>
+                <MDBBtn
+                  className="mb-2 w-100"
+                  color="secondary"
+                  onClick={() =>
+                    logInUser({
+                      email: DEMO_LEARNER.email,
+                      password: DEMO_LEARNER.password,
+                    })
+                  }
+                >
+                  Continue as demo learner
+                </MDBBtn>
+                <MDBBtn
+                  className="w-100"
+                  color="light"
+                  onClick={() =>
+                    logInUser({
+                      email: DEMO_ADMIN.email,
+                      password: DEMO_ADMIN.password,
+                    })
+                  }
+                >
+                  Continue as demo admin
+                </MDBBtn>
+              </div>
+            )}
             <p className="ms-5">
               Don't have an account?{" "}
               <a href="/register" className="link-info">
@@ -129,7 +174,7 @@ function LoginForm() {
         <MDBCol sm="6" className="d-none d-sm-block px-0">
           <img
             src="/images/bg2.png"
-            alt="Login image"
+            alt="Illustrated reading scene"
             className="w-100"
             style={{ objectFit: "cover", objectPosition: "left" }}
           />

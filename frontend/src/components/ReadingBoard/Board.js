@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MDBBtn } from "mdb-react-ui-kit";
 import AudioAnalyser from "react-audio-analyser";
 import httpClient from "../../httpClient";
+import { isDemoMode } from "../../demo/config";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,7 +11,7 @@ function Board(props) {
   const navigate = useNavigate(); // Hook to navigate programmatically
   const [status, setStatus] = useState(""); // Tracks the current status of the audio recording
   const audioType = "audio/wav"; // Specifies the type of audio file to handle
-  const [audioSrc, setAudioSrc] = useState(null); // Stores the audio source URL for playback
+  const [audioSrc] = useState(null); // Playback URL is filled when a recording is kept.
 
   // Split the story content into individual sentences and remove empty ones
   const story = props.story
@@ -21,7 +22,9 @@ function Board(props) {
   const [storyIndex, setStoryIndex] = useState(0);
 
   // State to track the sentence the user is currently reading
-  const [currentSentence, setCurrentSentence] = useState("");
+  const [currentSentence, setCurrentSentence] = useState(story[0] || "");
+  const demoMode = isDemoMode();
+  const statsUploaded = useRef(false);
 
   // State to track the highlighted sentence in feedback mode
   const [feedbackHighlightedSentence, setFeedbackHighlightedSentence] =
@@ -60,9 +63,9 @@ function Board(props) {
    * @param {string} newStatus - The new status of the audio recording (e.g., 'recording', 'inactive').
    */
   const controlAudio = (newStatus) => {
-    if (newStatus == "recording") {
+    if (newStatus === "recording") {
       setStopButtonClickable(true);
-    } else if (newStatus == "inactive") {
+    } else if (newStatus === "inactive") {
       setStopButtonClickable(false);
     }
     setStatus(newStatus);
@@ -74,6 +77,8 @@ function Board(props) {
    */
   useEffect(() => {
     setCurrentSentence(story[storyIndex]);
+    // `story` is recreated from props each render; storyIndex is the real input.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storyIndex]);
 
   /**
@@ -96,6 +101,8 @@ function Board(props) {
     if (isFeedbackMode && mispronouncedWords.length > 0) {
       setCurrentSentence(mispronouncedWords[currentWordIndex]?.word || "");
     }
+    // Only move the prompt when the feedback word changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mispronouncedWords, currentWordIndex]);
 
   /**
@@ -104,7 +111,8 @@ function Board(props) {
    */
   useEffect(() => {
     // If storyIndex has exceeded the length, we trigger the stats upload
-    if (storyIndex > story.length - 1) {
+    if (storyIndex > story.length - 1 && !statsUploaded.current) {
+      statsUploaded.current = true;
       handleStatsUpload(
         errorsMade,
         100 - Math.round((errorsMade / totalWords) * 100),
@@ -113,16 +121,29 @@ function Board(props) {
         )
       );
     }
+    // Upload once when the passage ends. The ref blocks a second send.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioFileLengths, storyIndex]);
 
   /**
    * Handles the uploading of the recorded audio file to the backend.
    * @param {Blob} blob - The recorded audio file in Blob format.
    */
+  const speakDemoWord = (word) => {
+    if (!demoMode || !word || typeof window === "undefined" || !window.speechSynthesis) {
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.rate = 0.85;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
   const handleAudioUpload = async (blob) => {
+    const sentence = (currentSentence || story[storyIndex] || "").trim();
     const formData = new FormData();
     formData.append("audio", blob, "audio.wav");
-    formData.append("currentSentence", currentSentence.trim());
+    formData.append("currentSentence", sentence);
 
     try {
       const response = await httpClient.post(
@@ -399,6 +420,9 @@ function Board(props) {
                   style={{ marginBottom: "16px" }}
                   controls
                   src={mispronouncedWords[currentWordIndex]?.audio_url}
+                  onPlay={() =>
+                    speakDemoWord(mispronouncedWords[currentWordIndex]?.word)
+                  }
                 ></audio>
                 {mistakeCount >= 2 && (
                   <MDBBtn size="lg" color="primary" onClick={moveToNextWord}>
@@ -449,7 +473,14 @@ function Board(props) {
           flexGrow: 1,
         }}
       >
-        <div style={{ display: "flex", justifyContent: "center", gap: "30px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "30px",
+            flexWrap: "wrap",
+          }}
+        >
           <button
             style={{
               padding: "15px 30px",
@@ -493,7 +524,40 @@ function Board(props) {
           >
             Stop Reading
           </button>
+          {demoMode && (
+            <button
+              type="button"
+              style={{
+                padding: "15px 30px",
+                fontSize: "1.5rem",
+                color: "#fff",
+                backgroundColor: "#6f42c1",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+              onClick={() =>
+                handleAudioUpload(new Blob(["demo-audio"], { type: "audio/wav" }))
+              }
+            >
+              Simulate reading
+            </button>
+          )}
         </div>
+        {demoMode && (
+          <p
+            style={{
+              textAlign: "center",
+              marginTop: "16px",
+              marginBottom: 0,
+              color: "#3d2f22",
+              fontSize: "1rem",
+            }}
+          >
+            Demo mode scores a canned reading. Use Simulate reading if the
+            microphone is unavailable.
+          </p>
+        )}
       </div>
 
       <div

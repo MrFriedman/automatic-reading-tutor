@@ -138,6 +138,29 @@ Ensure the frontend is set to communicate with the backend. Update the package.j
    "proxy": "http://localhost:5000"
 ```
 
+## Front-end demo on Vercel
+
+The React app can be deployed on its own. With no environment variables, demo mode is on and every Flask call is answered in the browser with seeded stories, sessions, and canned pronunciation scores. A microphone is optional: **Simulate reading** on the reading board applies the canned score.
+
+Demo accounts:
+
+- Learner: `learner@demo.com` / `demo1234`
+- Admin: `admin@gmail.com` / `admin`
+
+To call the real Flask API instead, set `REACT_APP_API_URL` (for example `http://localhost:5000`). `REACT_APP_DEMO_MODE=true` or `false` overrides that default. For local `npm start` against the CRA proxy, set `REACT_APP_DEMO_MODE=false` and leave the API URL unset. See `frontend/.env.example`.
+
+Vercel project settings:
+
+| Setting | Value |
+| --- | --- |
+| Root Directory | `frontend` |
+| Framework Preset | Create React App |
+| Install Command | `npm install` |
+| Build Command | `npm run build` |
+| Output Directory | `build` |
+
+`frontend/vercel.json` rewrites client-side routes to `index.html`. No environment variables are required for the demo build. If the hosted app should call a real API, set `REACT_APP_API_URL` in Vercel and `FRONTEND_ORIGIN` (the Vercel origin) on Flask. Cross-site session cookies also need `SESSION_COOKIE_SAMESITE=None` and `SESSION_COOKIE_SECURE=true`.
+
 ## Testing
 
 To run the unit tests for speech_checker.py navigate to the backend directory, and use the following command:

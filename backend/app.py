@@ -26,7 +26,14 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 bcrypt = Bcrypt(app)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}}, allow_headers=["Content-Type", "Authorization"])
+# Comma-separated origins. Defaults to the CRA dev server. Set FRONTEND_ORIGIN
+# when a deployed front end calls this API (credentials require an explicit origin).
+_frontend_origins = [
+    origin.strip()
+    for origin in os.environ.get("FRONTEND_ORIGIN", "http://localhost:3000").split(",")
+    if origin.strip()
+]
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": _frontend_origins}}, allow_headers=["Content-Type", "Authorization"])
 server_session = Session(app)
 db.init_app(app)
 

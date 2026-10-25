@@ -51,6 +51,8 @@ function StoryStatistics(props) {
         alert("Error retrieving statistic information");
       }
     })();
+    // Fetch the completed attempt once. Helpers are recreated every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**

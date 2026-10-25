@@ -49,6 +49,8 @@ const UserStatistics = () => {
         }
       }
     })();
+    // Load the lifetime table once when the screen opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import httpClient from "../../httpClient";
 
 import {
   MDBContainer,
-  MDBFooter,
   MDBTypography,
-  MDBIcon,
   MDBRow,
   MDBCol,
   MDBBtn,
@@ -38,13 +36,13 @@ function StoryManagement() {
     if (!title || !content || !difficulty) {
       setMessage("All fields must be filled in.");
       setMessageType("error");
-    } else if (!/^[\w\s]+[\.\!]\s+[\w\s]+[\.\!]/.test(content)) {
+    } else if (!/^[\w\s]+[.!]\s+[\w\s]+[.!]/.test(content)) {
       setMessage("Content must be in the format of <sentence>. <sentence>.");
       setMessageType("error");
     } else {
       // Submit the form data
       try {
-        const response = await httpClient.post("/admin/add_story", {
+        await httpClient.post("/admin/add_story", {
           title,
           content,
           difficulty,

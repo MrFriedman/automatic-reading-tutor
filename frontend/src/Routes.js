@@ -15,10 +15,12 @@ import AdminStoryManagement from "./pages/AdminStoryManagement";
 
 import "mdb-react-ui-kit/dist/css/mdb.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import DemoBanner from "./demo/DemoBanner";
 
 const Router = () => {
   return (
     <BrowserRouter>
+      <DemoBanner />
       <Routes>
         <Route path="/" element={<LoginForm />} />
         <Route path="/home" element={<Home />} />

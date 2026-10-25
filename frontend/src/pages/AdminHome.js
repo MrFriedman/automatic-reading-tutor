@@ -31,6 +31,8 @@ function AdminHome() {
         console.log("Not authenticated");
       }
     })();
+    // Load the signed-in admin once. `user` is the result, not an input.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
